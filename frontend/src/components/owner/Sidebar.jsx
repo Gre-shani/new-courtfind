@@ -15,7 +15,7 @@ const Sidebar = () => {
 
       {/* Navigation Items */}
       <nav className="nav flex-column">
-        <SidebarItem to="/dashboard" icon={Home} label="Dashboard" />
+        <SidebarItem to="/owner-dashboard" icon={Home} label="Dashboard" />
         <SidebarItem to="/arena-bookings" icon={Calendar} label="Arena Bookings" />
         <SidebarItem to="/my-arenas" icon={Landmark} label="My Arenas" />
         <SidebarItem to="/add-arena" icon={PlusCircle} label="Add Arena" />

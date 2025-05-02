@@ -1,26 +1,61 @@
 import React, { useState } from "react";
 import { loginUser } from "../services/authService";
 import { useNavigate } from "react-router-dom";
-import { Form, Button, Container, Alert, Row, Col } from "react-bootstrap"; // Added Row and Col imports
+import { Form, Button, Container, Alert, Row, Col, InputGroup } from "react-bootstrap";
+import { useAuth } from "../contexts/AuthContext";
+import { jwtDecode } from "jwt-decode";
+import { FaRegEye } from "react-icons/fa6";
+import { FaRegEyeSlash } from "react-icons/fa6";
+
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");  // Separate error state
-  const [successMessage, setSuccessMessage] = useState(""); // Separate success state
+  const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const { updateAuthState } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await loginUser({ email, password });
-      setSuccessMessage("Login successful!"); // Set success message
-      navigate("/dashboard"); // Redirect after successful login
+  
+      console.log("Full API Response in Login:", response); // Debugging line
+  
+      if (!response || !response.token) {
+        throw new Error("Token not received!");
+      }
+  
+      const token = response.token; 
+  
+      console.log("Token received:", token);
+      localStorage.setItem("authToken", token);
+      updateAuthState(); // Update navbar state
+    
+      const decodedToken = jwtDecode(token);
+      console.log("Decoded Token:", decodedToken);
+  
+      if (!decodedToken.role) throw new Error("Role not found in token!");
+  
+      const userRole = decodedToken.role;
+      setSuccessMessage("Login successful!");
+  
+      if (userRole === "Player") {
+        navigate("/player-dashboard");
+      } else if (userRole === "Owner") {
+        navigate("/owner-dashboard");
+      } else {
+        throw new Error("Invalid user role!");
+      }
     } catch (err) {
-      setErrorMessage(err.response?.data?.message || "Login failed"); // Set error message
-      setSuccessMessage(""); // Clear success message on error
+      console.error("Login Error:", err);
+      setErrorMessage(err.response?.data?.message || err.message || "Login failed");
+      setSuccessMessage("");
     }
   };
+  
 
   return (
     <Container className="min-vh-100 d-flex justify-content-center align-items-center">
@@ -48,13 +83,21 @@ const Login = () => {
 
               <Form.Group controlId="formPassword">
                 <Form.Label>Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <InputGroup>
+                  <Form.Control
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <Button 
+                    variant="light" 
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <FaRegEyeSlash /> : <FaRegEye />}
+                  </Button>
+                </InputGroup>
               </Form.Group> <br />
               <Button variant="link" onClick={() => navigate("/forgot-password")}>
                 Forgot Password
@@ -69,7 +112,6 @@ const Login = () => {
               By signing in, I agree to the Courtfind Terms of Use and Privacy Policy.
             </p>
 
-            {/* Display success or error message */}
             {successMessage && <Alert variant="success">{successMessage}</Alert>}
             {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
           </div>

@@ -1,0 +1,14 @@
+const express = require("express");
+const router = express.Router();
+
+const authRoutes = require("./authRoutes");
+const ownerRoutes = require("./ownerRoutes");
+const playerRoutes = require("./playerRoutes");
+const commonRoutes = require("./commonRoutes");
+
+router.use("/auth", authRoutes);
+router.use("/owner", ownerRoutes);
+router.use("/player", playerRoutes);
+router.use("/common", commonRoutes);
+
+module.exports = router;
